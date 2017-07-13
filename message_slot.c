@@ -52,7 +52,7 @@ static int device_open(struct inode *inode, struct file *file) {
         if (head == NULL) {
             head = kmalloc(sizeof(struct node), GFP_KERNEL);
             if (head == NULL) {
-                printk("kmalloc failed in func: %s, in file: %s\n", __FUNC__, __FILE__);
+                printk("kmalloc failed in file: %s\n", __FILE__);
             }
             head->id = id;
             head->open = 1;
@@ -63,7 +63,7 @@ static int device_open(struct inode *inode, struct file *file) {
             while (current_node->next != NULL) current_node = current_node->next;
             current_node->next = kmalloc(sizeof(struct node), GFP_KERNEL);
             if (current_node->next == NULL) {
-                printk("kmalloc failed in func: %s, in file: %s\n", __FUNC__, __FILE__);
+                printk("kmalloc failed in file: %s\n", __FILE__);
             }
             current_node->next->id = id;
             current_node->next->open = 1;

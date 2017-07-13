@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 
 int main(int argc, char* argv[]) {
     int file_desc, ret_val, index, length;
@@ -24,7 +25,7 @@ int main(int argc, char* argv[]) {
 
     file_desc = open("/dev/"DEVICE_FILE_NAME, O_RDONLY);
     if (file_desc < 0) {
-        printf("Error: Can't open device file: %s. %s \n", DEVICE_FILE_NAME, , strerror(errno));
+        printf("Error: Can't open device file: %s. %s \n", DEVICE_FILE_NAME, strerror(errno));
         exit(-1);
     }
 
