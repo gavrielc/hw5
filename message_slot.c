@@ -1,4 +1,3 @@
-
 #undef __KERNEL__
 #define __KERNEL__
 #undef MODULE
@@ -19,14 +18,14 @@ struct message_slot {
     int index = -1;
 };
 
-struct node {
+typedef struct node {
     int open = 0;
     int id = -1;
     struct message_slot data;
     struct node* next = NULL;
 }
 
-static struct node* head = NULL;
+static node* head = NULL;
 
 
 
@@ -34,12 +33,11 @@ static struct node* head = NULL;
 
 
 static int device_open(struct inode *inode, struct file *file) {
-
     printk("device_open(%p)\n", file);
 
     int id = file->f_inode->i_ino;
 
-    struct node* current = head;
+    node* current = head;
 
     while (current != NULL) {
         if (current->id == id) {
@@ -72,7 +70,7 @@ static int device_release(struct inode *inode, struct file *file) {
 
     int id = file->f_inode->i_ino;
 
-    struct node* current = head;
+    node* current = head;
 
     while (current != NULL) {
         if (current->id == id) {
@@ -91,7 +89,7 @@ static ssize_t device_read(struct file *file, char __user * buffer, size_t lengt
     /* read doesnt really do anything (for now) */
     printk("device_read(%p,%d) - operation not supported yet (last written - %s)\n", file, length, Message);
 
-    return -EINVAL; // invalid argument error
+    return -EINVAL;  //  invalid argument error
 }
 
 
@@ -101,14 +99,14 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
 
     int id = file->f_inode->i_ino;
 
-    struct node* current = head;
+    node* current = head;
 
     while (current != NULL && current->id != id) current = current->next;
 
     if (current == NULL) {
-        //TODO file doesnt exist
+        //  TODO file doesnt exist
     } else if (!(current->open)) {
-        //TODO closed
+        //  TODO closed
     }
 
     int index = current->data.index;
@@ -128,11 +126,11 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
 }
 
 //----------------------------------------------------------------------------
-static long device_ioctl( struct file* file, unsigned int ioctl_num, unsigned long ioctl_param) {
+static long device_ioctl(struct file* file, unsigned int ioctl_num, unsigned long ioctl_param) {
 
   if (IOCTL_SET_ENC == ioctl_num && ioctl_param > -1 && ioctl_param < 4) {
     printk("chardev, ioctl: setting index to %ld\n", ioctl_param);
-    struct node* current = head;
+    node* current = head;
     int id = file->f_inode->i_ino;
     while (current->id != id) current = current->next;
     if (current->open) {
@@ -155,9 +153,9 @@ static long device_ioctl( struct file* file, unsigned int ioctl_num, unsigned lo
 struct file_operations Fops = {
     .read = device_read,
     .write = device_write,
-    .unlocked_ioctl= device_ioctl,
+    .unlocked_ioctl = device_ioctl,
     .open = device_open,
-    .release = device_release,  
+    .release = device_release,
 };
 
 
@@ -179,8 +177,8 @@ static int __init simple_init(void) {
 
 
 static void __exit simple_cleanup(void) {
-    struct node* current head;
-    struct node* next;
+    node* current head;
+    node* next;
 
     while (current != NULL) {
         next = current->next;
