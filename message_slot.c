@@ -7,6 +7,7 @@
 
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/slab.h>
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 #include <linux/string.h>
@@ -70,11 +71,14 @@ static int device_open(struct inode *inode, struct file *file) {
 }
 
 static int device_release(struct inode *inode, struct file *file) {
+    int id;
+    node_t* current_node;
+
     printk("device_release(%p,%p)\n", inode, file);
 
-    int id = file->f_inode->i_ino;
+    id = file->f_inode->i_ino;
 
-    node_t* current_node = head;
+    current_node = head;
 
     while (current_node != NULL) {
         if (current_node->id == id) {
@@ -91,7 +95,7 @@ static int device_release(struct inode *inode, struct file *file) {
 
 static ssize_t device_read(struct file *file, char __user * buffer, size_t length, loff_t * offset) {
     /* read doesnt really do anything (for now) */
-    printk("device_read(%p,%d) - operation not supported yet (last written - %s)\n", file, length, Message);
+    printk("device_read(%p,%d) - operation not supported yet (last written - )\n", file, length);
 
     return -EINVAL;  //  invalid argument error
 }
@@ -99,11 +103,15 @@ static ssize_t device_read(struct file *file, char __user * buffer, size_t lengt
 
 static ssize_t device_write(struct file *file, const char __user * buffer, size_t length, loff_t * offset) {
   int i;
+  int id;
+  node_t* current_node;
+  int index;
+
   printk("device_write(%p,%d)\n", file, length);
 
-    int id = file->f_inode->i_ino;
+    id = file->f_inode->i_ino;
 
-    node_t* current_node = head;
+    current_node = head;
 
     while (current_node != NULL && current_node->id != id) current_node = current_node->next;
 
@@ -113,7 +121,7 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
         //  TODO closed
     }
 
-    int index = current_node->data.index;
+    index = current_node->data.index;
     //TODO check index
 
     for (i = 0; i < 128; i++) {
@@ -133,9 +141,12 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
 static long device_ioctl(struct file* file, unsigned int ioctl_num, unsigned long ioctl_param) {
 
   if (IOCTL_SET_ENC == ioctl_num && ioctl_param > -1 && ioctl_param < 4) {
+    node_t* current_node;
+    int id;
+
     printk("chardev, ioctl: setting index to %ld\n", ioctl_param);
-    node_t* current_node = head;
-    int id = file->f_inode->i_ino;
+    current_node = head;
+    id = file->f_inode->i_ino;
     while (current_node->id != id) current_node = current_node->next;
     if (current_node->open) {
         current_node->data.index = ioctl_param;
@@ -181,8 +192,10 @@ static int __init simple_init(void) {
 
 
 static void __exit simple_cleanup(void) {
-    node_t* current_node head;
+    node_t* current_node;
     node_t* next;
+
+    current_node = head;
 
     while (current_node != NULL) {
         next = current_node->next;
