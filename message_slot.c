@@ -164,6 +164,7 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
 
 //----------------------------------------------------------------------------
 static long device_ioctl(struct file* file, unsigned int ioctl_num, unsigned long ioctl_param) {
+    printk("chardev, ioctl: setting index to %ld\n", ioctl_param);
 
     if (IOCTL_SET_ENC == ioctl_num && ioctl_param > -1 && ioctl_param < 4) {
         node_t* current_node;

@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    ret_val = ioctl(file_desc, IOCTL_SET_ENC, 1);
+    ret_val = ioctl(file_desc, IOCTL_SET_ENC, 2);
 
     if (ret_val < 0) {
         printf ("ioctl_set_msg failed:%d\n", ret_val);
