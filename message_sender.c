@@ -21,6 +21,13 @@ int main(int argc, char* argv[]) {
         printf ("ioctl_set_msg failed:%d\n", ret_val);
         exit(-1);
     }
+
+    ret_val = write(file_desc, argv[2], 10, 0);
+
+    if (ret_val < 0) {
+        printf ("write failed:%d\n", ret_val);
+        exit(-1);
+    }
     close(file_desc);
     return 0;
 }
