@@ -94,20 +94,45 @@ static int device_release(struct inode *inode, struct file *file) {
 
 
 static ssize_t device_read(struct file *file, char __user * buffer, size_t length, loff_t * offset) {
-    /* read doesnt really do anything (for now) */
-    printk("device_read(%p,%d) - operation not supported yet (last written - )\n", file, length);
+    int i;
+    int id;
+    node_t* current_node;
+    int index;
 
-    return -EINVAL;  //  invalid argument error
+    printk("device_write(%p,%d)\n", file, length);
+
+    id = file->f_inode->i_ino;
+
+    current_node = head;
+
+    while (current_node != NULL && current_node->id != id) current_node = current_node->next;
+
+    if (current_node == NULL) {
+        //  TODO file doesnt exist
+    } else if (!(current_node->open)) {
+        return -EINVAL;  //  TODO closed
+    }
+
+    index = current_node->data.index;
+    //TODO check index
+
+    for (i = 0; i < length; i++) {
+        if (-EFAULT == put_user(current_node->data.buffers[index][i], buffer + i)) {
+            //TODO handle error
+        }
+    }
+
+    return i;
 }
 
 
 static ssize_t device_write(struct file *file, const char __user * buffer, size_t length, loff_t * offset) {
-  int i;
-  int id;
-  node_t* current_node;
-  int index;
+    int i;
+    int id;
+    node_t* current_node;
+    int index;
 
-  printk("device_write(%p,%d)\n", file, length);
+    printk("device_write(%p,%d)\n", file, length);
 
     id = file->f_inode->i_ino;
 
@@ -140,24 +165,24 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
 //----------------------------------------------------------------------------
 static long device_ioctl(struct file* file, unsigned int ioctl_num, unsigned long ioctl_param) {
 
-  if (IOCTL_SET_ENC == ioctl_num && ioctl_param > -1 && ioctl_param < 4) {
-    node_t* current_node;
-    int id;
+    if (IOCTL_SET_ENC == ioctl_num && ioctl_param > -1 && ioctl_param < 4) {
+        node_t* current_node;
+        int id;
 
-    printk("chardev, ioctl: setting index to %ld\n", ioctl_param);
-    current_node = head;
-    id = file->f_inode->i_ino;
-    while (current_node->id != id) current_node = current_node->next;
-    if (current_node->open) {
-        current_node->data.index = ioctl_param;
+        printk("chardev, ioctl: setting index to %ld\n", ioctl_param);
+        current_node = head;
+        id = file->f_inode->i_ino;
+        while (current_node->id != id) current_node = current_node->next;
+        if (current_node->open) {
+            current_node->data.index = ioctl_param;
+        } else {
+            //TODO ERORR
+        }
     } else {
-        //TODO ERORR
+        return -EINVAL;
     }
-  } else {
-    return -EINVAL;
-  }
 
-  return SUCCESS;
+    return SUCCESS;
 }
 
 /************** Module Declarations *****************/
@@ -199,7 +224,7 @@ static void __exit simple_cleanup(void) {
 
     while (current_node != NULL) {
         next = current_node->next;
-        free(current_node);
+        kfree(current_node);
         current_node = next;
     }
 
