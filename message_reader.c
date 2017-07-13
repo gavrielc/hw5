@@ -5,34 +5,34 @@
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#define BUF_SIZE 128
+#include <errno.h>
 
 int main(int argc, char* argv[]) {
     int file_desc, ret_val, index, length;
     char buffer[BUF_SIZE];
 
     if (argc < 2) {
-        printf("Not enough arguments\n");
+        printf("Invalid Arguments: Not enough arguments\n");
         exit(-1);
     }
 
     ret_val = sscanf(argv[1], "%d", &index);
     if (ret_val < 1 || index < 0 || index > 3) {
-        printf("invalid index\n");
+        printf("Invalid Arguments: invalid index\n");
         exit(-1);
     }
 
     file_desc = open("/dev/"DEVICE_FILE_NAME, O_RDONLY);
     if (file_desc < 0) {
-        printf("Can't open device file: %s\n", DEVICE_FILE_NAME);
+        printf("Error: Can't open device file: %s. %s \n", DEVICE_FILE_NAME, , strerror(errno));
         exit(-1);
     }
 
     ret_val = ioctl(file_desc, IOCTL_SET_ENC, index);
 
     if (ret_val < 0) {
-        printf("ioctl_set_msg failed:%d\n", ret_val);
+        printf("Error: ioctl_set_msg failed: %d. %s\n", ret_val, strerror(errno));
+        close(file_desc);
         exit(-1);
     }
 
@@ -40,6 +40,6 @@ int main(int argc, char* argv[]) {
 
     close(file_desc);
 
-    printf("Read: %s\n", buffer);
+    printf("Read from message slot: %s\n", buffer);
     return 0;
 }

@@ -15,7 +15,7 @@
 MODULE_LICENSE("GPL");
 
 struct message_slot {
-    char buffers[4][128];
+    char buffers[CHANNELS][BUF_SIZE];
     int index;
 };
 
@@ -27,11 +27,6 @@ typedef struct node {
 } node_t;
 
 static node_t* head = NULL;
-
-
-
-/***************** char device functions *********************/
-
 
 static int device_open(struct inode *inode, struct file *file) {
     int id;
@@ -56,14 +51,24 @@ static int device_open(struct inode *inode, struct file *file) {
     if (current_node == NULL) {
         if (head == NULL) {
             head = kmalloc(sizeof(struct node), GFP_KERNEL);
+            if (head == NULL) {
+                printk("kmalloc failed in func: %s, in file: %s\n", __FUNC__, __FILE__);
+            }
             head->id = id;
             head->open = 1;
+            head->data.index = -1;
+            head->next = NULL;
         } else {
             current_node = head;
             while (current_node->next != NULL) current_node = current_node->next;
             current_node->next = kmalloc(sizeof(struct node), GFP_KERNEL);
+            if (current_node->next == NULL) {
+                printk("kmalloc failed in func: %s, in file: %s\n", __FUNC__, __FILE__);
+            }
             current_node->next->id = id;
             current_node->next->open = 1;
+            current_node->next->next = NULL;
+            current_node->next->data.index = -1;
         }
     }
 
@@ -108,17 +113,23 @@ static ssize_t device_read(struct file *file, char __user * buffer, size_t lengt
     while (current_node != NULL && current_node->id != id) current_node = current_node->next;
 
     if (current_node == NULL) {
-        //  TODO file doesnt exist
+        printk("device_not_found(%p)\n", file);
+        return -EINVAL;
     } else if (!(current_node->open)) {
-        return -EINVAL;  //  TODO closed
+        printk("device_not_open(%p)\n", file);
+        return -EINVAL;
     }
 
     index = current_node->data.index;
-    //TODO check index
+    if (index < 0 || index > 3) {
+        printk("index_not_set(%p)\n", file);
+        return -EINVAL;
+    }
 
-    for (i = 0; i < length; i++) {
+    for (i = 0; i < length && i < BUF_SIZE; i++) {
         if (-EFAULT == put_user(current_node->data.buffers[index][i], buffer + i)) {
-            //TODO handle error
+            printk("user_buffer_error(%p)\n", file);
+            return -EINVAL;
         }
     }
 
@@ -141,18 +152,24 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
     while (current_node != NULL && current_node->id != id) current_node = current_node->next;
 
     if (current_node == NULL) {
-        //  TODO file doesnt exist
+        printk("device_not_found(%p)\n", file);
+        return -EINVAL;
     } else if (!(current_node->open)) {
-        //  TODO closed
+        printk("device_not_open(%p)\n", file);
+        return -EINVAL;
     }
 
     index = current_node->data.index;
-    //TODO check index
+    if (index < 0 || index > 3) {
+        printk("index_not_set(%p)\n", file);
+        return -EINVAL;
+    }
 
-    for (i = 0; i < 128; i++) {
+    for (i = 0; i < BUF_SIZE; i++) {
         if (i < length) {
             if (-EFAULT == get_user(current_node->data.buffers[index][i], buffer + i)) {
-                //TODO handle error
+                printk("user_buffer_error(%p)\n", file);
+                return -EINVAL;
             }
         } else {
             current_node->data.buffers[index][i] = '\0';
@@ -168,7 +185,10 @@ static long device_ioctl(struct file* file, unsigned int ioctl_num, unsigned lon
         node_t* current_node;
         int id;
 
-        // TODO  && ioctl_param > -1 && ioctl_param < 4
+        if (ioctl_param < 0 || ioctl_param > 3) {
+            printk("index_not_set(%p)\n", file);
+            return -EINVAL;
+        }
 
         printk("chardev, ioctl: setting index to %ld\n", ioctl_param);
         current_node = head;
@@ -177,19 +197,16 @@ static long device_ioctl(struct file* file, unsigned int ioctl_num, unsigned lon
         if (current_node->open) {
             current_node->data.index = ioctl_param;
         } else {
-            //TODO ERORR
+            printk("device_not_open(%p)\n", file);
+            return -EINVAL;
         }
     } else {
+        printk("incorrect_command(%p)\n", file);
         return -EINVAL;
     }
 
     return SUCCESS;
 }
-
-/************** Module Declarations *****************/
-
-/* This structure will hold the functions to be called
- * when a process does something to the device we created */
 
 struct file_operations Fops = {
     .read = device_read,
