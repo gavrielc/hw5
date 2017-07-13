@@ -166,9 +166,11 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
 static long device_ioctl(struct file* file, unsigned int ioctl_num, unsigned long ioctl_param) {
     printk("chardev, ioctl: setting index to %ld\n", ioctl_param);
 
-    if (IOCTL_SET_ENC == ioctl_num && ioctl_param > -1 && ioctl_param < 4) {
+    if (IOCTL_SET_ENC == ioctl_num) {
         node_t* current_node;
         int id;
+
+        // TODO  && ioctl_param > -1 && ioctl_param < 4
 
         printk("chardev, ioctl: setting index to %ld\n", ioctl_param);
         current_node = head;
@@ -228,6 +230,7 @@ static void __exit simple_cleanup(void) {
         kfree(current_node);
         current_node = next;
     }
+    printk("Unregistering\n");
 
     unregister_chrdev(MAJOR_NUM, DEVICE_RANGE_NAME);
 }
