@@ -7,20 +7,37 @@
 #include <stdlib.h>
 
 int main(int argc, char* argv[]) {
-    int file_desc, ret_val;
+    int file_desc, ret_val, index, length;
+    char buffer[BUF_SIZE];
+
+    if (argc < 2) {
+        printf("Not enough arguments\n");
+        exit(-1);
+    }
+
+    ret_val = sscanf(argv[1], "%d", &index);
+    if (ret_val < 1 || index < 0 || index > 3) {
+        printf("invalid index\n");
+        exit(-1);
+    }
 
     file_desc = open("/dev/"DEVICE_FILE_NAME, 0);
     if (file_desc < 0) {
-        printf ("Can't open device file: %s\n", DEVICE_FILE_NAME);
+        printf("Can't open device file: %s\n", DEVICE_FILE_NAME);
         exit(-1);
     }
 
-    ret_val = ioctl(file_desc, IOCTL_SET_ENC, 2);
+    ret_val = ioctl(file_desc, IOCTL_SET_ENC, index);
 
     if (ret_val < 0) {
-        printf ("ioctl_set_msg failed:%d\n", ret_val);
+        printf("ioctl_set_msg failed:%d\n", ret_val);
         exit(-1);
     }
+
+    length = read(file_desc, buffer, BUF_SIZE);
+
     close(file_desc);
+
+    printf("Read: %s\n", buffer);
     return 0;
 }
