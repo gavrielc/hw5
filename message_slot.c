@@ -23,9 +23,9 @@ typedef struct node {
     int id;
     struct message_slot data;
     struct node* next;
-}
+} node_t;
 
-static node* head = NULL;
+static node_t* head = NULL;
 
 
 
@@ -33,11 +33,15 @@ static node* head = NULL;
 
 
 static int device_open(struct inode *inode, struct file *file) {
+    int id;
+    node_t* current;
+
+
     printk("device_open(%p)\n", file);
 
-    int id = file->f_inode->i_ino;
 
-    node* current = head;
+    id = file->f_inode->i_ino;
+    current = head;
 
     while (current != NULL) {
         if (current->id == id) {
@@ -70,7 +74,7 @@ static int device_release(struct inode *inode, struct file *file) {
 
     int id = file->f_inode->i_ino;
 
-    node* current = head;
+    node_t* current = head;
 
     while (current != NULL) {
         if (current->id == id) {
@@ -99,7 +103,7 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
 
     int id = file->f_inode->i_ino;
 
-    node* current = head;
+    node_t* current = head;
 
     while (current != NULL && current->id != id) current = current->next;
 
@@ -130,7 +134,7 @@ static long device_ioctl(struct file* file, unsigned int ioctl_num, unsigned lon
 
   if (IOCTL_SET_ENC == ioctl_num && ioctl_param > -1 && ioctl_param < 4) {
     printk("chardev, ioctl: setting index to %ld\n", ioctl_param);
-    node* current = head;
+    node_t* current = head;
     int id = file->f_inode->i_ino;
     while (current->id != id) current = current->next;
     if (current->open) {
@@ -177,8 +181,8 @@ static int __init simple_init(void) {
 
 
 static void __exit simple_cleanup(void) {
-    node* current head;
-    node* next;
+    node_t* current head;
+    node_t* next;
 
     while (current != NULL) {
         next = current->next;
