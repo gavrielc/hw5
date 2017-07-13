@@ -155,7 +155,7 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
                 //TODO handle error
             }
         } else {
-            current_node->data.buffers[index][i] = '0';
+            current_node->data.buffers[index][i] = '\0';
         }
     }
 
@@ -164,10 +164,6 @@ static ssize_t device_write(struct file *file, const char __user * buffer, size_
 
 //----------------------------------------------------------------------------
 static long device_ioctl(struct file* file, unsigned int ioctl_num, unsigned long ioctl_param) {
-    printk("chardev, ioctl: setting index to %ld\n", ioctl_param);
-
-    printk("chardev, ioctl: IOCTL_SET_ENC %ul\n", IOCTL_SET_ENC);
-    printk("chardev, ioctl: ioctl_num %ul\n", ioctl_num);
     if (IOCTL_SET_ENC == ioctl_num) {
         node_t* current_node;
         int id;

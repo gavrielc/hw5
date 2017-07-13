@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define BUF_SIZE 128
+
 int main(int argc, char* argv[]) {
     int file_desc, ret_val, index, length;
     char buffer[BUF_SIZE];
@@ -21,7 +23,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    file_desc = open("/dev/"DEVICE_FILE_NAME, 0);
+    file_desc = open("/dev/"DEVICE_FILE_NAME, O_RDONLY);
     if (file_desc < 0) {
         printf("Can't open device file: %s\n", DEVICE_FILE_NAME);
         exit(-1);

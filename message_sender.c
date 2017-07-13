@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    file_desc = open("/dev/"DEVICE_FILE_NAME, 0);
+    file_desc = open("/dev/"DEVICE_FILE_NAME, O_WRONLY);
     if (file_desc < 0) {
         printf("Can't open device file: %s\n", DEVICE_FILE_NAME);
         exit(-1);
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    ret_val = write(file_desc, argv[2], length > BUF_SIZE ? BUF_SIZE : length);
+    ret_val = write(file_desc, buffer, length > BUF_SIZE ? BUF_SIZE : length);
 
     if (ret_val < 0) {
         printf("write failed:%d\n", ret_val);
