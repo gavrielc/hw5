@@ -99,7 +99,7 @@ static ssize_t device_read(struct file *file, char __user * buffer, size_t lengt
     node_t* current_node;
     int index;
 
-    printk("device_write(%p,%d)\n", file, length);
+    printk("device_read(%p,%d)\n", file, length);
 
     id = file->f_inode->i_ino;
 
