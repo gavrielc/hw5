@@ -15,14 +15,14 @@ MODULE_LICENSE("GPL");
 
 struct message_slot {
     char buffers[4][128];
-    int index = -1;
+    int index;
 };
 
 typedef struct node {
-    int open = 0;
-    int id = -1;
+    int open;
+    int id;
     struct message_slot data;
-    struct node* next = NULL;
+    struct node* next;
 }
 
 static node* head = NULL;
